@@ -75,7 +75,7 @@ func (s *APRSIS) ReadPackets(packets chan aprs.Packet) (err error) {
 		var packet aprs.Packet
 		if packet, err = aprs.ParsePacket(line); err != nil {
 			if err != aprs.ErrAddressInvalid {
-				return
+				continue
 			}
 		}
 		packets <- packet
