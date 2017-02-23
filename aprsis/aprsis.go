@@ -32,7 +32,7 @@ func (s *APRSIS) Login(address *aprs.Address, filter string) (err error) {
 		filter = " filter " + filter
 	}
 
-	if err = s.PrintfLine("user %s pass %d vers go-aprs%s", address, address.Secret(), filter); err != nil {
+	if err = s.PrintfLine("user %s pass %d vers go-aprs DEV%s", address, address.Secret(), filter); err != nil {
 		return
 	}
 
