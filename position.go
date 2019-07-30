@@ -3,7 +3,6 @@ package aprs
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -113,7 +112,7 @@ func ParseUncompressedPosition(s string) (pos Position, txt string, err error) {
 	)
 
 	/* 3210.70N/13132.15E# */
-	log.Printf("s: %q\n", s[:18])
+	//log.Printf("s: %q\n", s[:18])
 	if latDeg, err = strconv.ParseUint(s[0:2], 10, 8); err != nil {
 		return
 	}
