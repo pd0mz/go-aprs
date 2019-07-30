@@ -5,7 +5,7 @@ import (
 	"net/textproto"
 	"strings"
 
-	"github.com/pd0mz/go-aprs"
+	"github.com/hb9tf/go-aprs"
 )
 
 var (
