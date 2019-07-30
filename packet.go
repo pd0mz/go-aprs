@@ -2,7 +2,6 @@ package aprs
 
 import (
 	"errors"
-	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -318,7 +317,7 @@ func (p *Packet) parseCompressedData() (err error) {
 }
 
 func (p *Packet) parseData() (err error) {
-	log.Printf("data %q\n", p.data)
+	//log.Printf("data %q\n", p.data)
 	switch {
 	case len(p.data) >= 1 && p.data[0] == ' ':
 		p.Comment = p.data[1:]
