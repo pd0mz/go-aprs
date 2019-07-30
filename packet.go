@@ -187,13 +187,13 @@ func ParsePacket(raw string) (p Packet, err error) {
 
 func (p *Packet) parse() error {
 	s := string(p.Payload)
-	log.Printf("parse %q [%c]\n", s, p.Payload.Type())
+	//log.Printf("parse %q [%c]\n", s, p.Payload.Type())
 
 	switch p.Payload.Type() {
 	case '!': // Lat/Long Position Report Format — without Timestamp
 		var o = strings.IndexByte(s, '!')
 		pos, txt, err := ParsePosition(s[o+1:], !isDigit(s[o+1]))
-		log.Printf("parse result: %s, %q, %v\n", pos, txt, err)
+		//log.Printf("parse result: %s, %q, %v\n", pos, txt, err)
 		if err != nil {
 			return err
 		}

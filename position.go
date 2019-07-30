@@ -305,7 +305,7 @@ func ParsePositionGrid(s string) (pos Position, txt string, err error) {
 }
 
 func ParsePosition(s string, compressed bool) (Position, string, error) {
-	log.Printf("parse position %q, %t\n", s, compressed)
+	//log.Printf("parse position %q, %t\n", s, compressed)
 	if compressed {
 		return ParseCompressedPosition(s)
 	}
