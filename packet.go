@@ -251,6 +251,13 @@ func (p *Packet) parse() error {
 		}
 		p.Position = &pos
 		p.data = txt
+	case '`', '\'':
+		pos, txt, err := ParseMicE(s, p.Dst.Call)
+		if err != nil {
+			return err
+		}
+		p.Position = &pos
+		p.data = txt
 	default:
 		pos, txt, err := ParsePositionBoth(s)
 		if err != nil {
