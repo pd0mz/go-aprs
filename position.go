@@ -227,12 +227,16 @@ func ParseMicE(s, dest string) (pos Position, txt string, err error) {
 	ns := miceCodes[rune(dest[3])][2]
 	we := miceCodes[rune(dest[5])][4]
 
-	latD, err := strconv.ParseFloat(fmt.Sprintf("%s%s", miceCodes[rune(dest[0])][0], miceCodes[rune(dest[1])][0]), 64)
+	latF := fmt.Sprintf("%s%s", miceCodes[rune(dest[0])][0], miceCodes[rune(dest[1])][0])
+	latF = strings.Trim(latF, ". ")
+	latD, err := strconv.ParseFloat(latF, 64)
 	if err != nil {
 		err = ErrInvalidPosition
 		return
 	}
-	latM, err := strconv.ParseFloat(fmt.Sprintf("%s%s.%s%s", miceCodes[rune(dest[2])][0], miceCodes[rune(dest[3])][0], miceCodes[rune(dest[4])][0], miceCodes[rune(dest[5])][0]), 64)
+	lonF := fmt.Sprintf("%s%s.%s%s", miceCodes[rune(dest[2])][0], miceCodes[rune(dest[3])][0], miceCodes[rune(dest[4])][0], miceCodes[rune(dest[5])][0])
+	lonF = strings.Trim(lonF, ". ")
+	latM, err := strconv.ParseFloat(lonF, 64)
 	if err != nil {
 		err = ErrInvalidPosition
 		return
