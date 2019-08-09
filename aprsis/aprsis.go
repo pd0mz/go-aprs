@@ -2,6 +2,7 @@ package aprsis
 
 import (
 	"errors"
+	"log"
 	"net/textproto"
 	"strings"
 
@@ -74,6 +75,7 @@ func (s *APRSIS) ReadPackets(packets chan aprs.Packet) (err error) {
 
 		var packet aprs.Packet
 		if packet, err = aprs.ParsePacket(line); err != nil {
+			log.Printf("error parsing packet: %v\n", err)
 			if err != aprs.ErrAddressInvalid {
 				continue
 			}
