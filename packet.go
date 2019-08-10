@@ -129,6 +129,7 @@ type Packet struct {
 	PHG      PowerHeightGain
 	DFS      OmniDFStrength
 	Range    float64 // Miles
+	Symbol   Symbol
 	Comment  string
 	data     string // Unparsed data
 }
@@ -296,6 +297,10 @@ func (p *Packet) parseMicEData() error {
 	if course >= 400 {
 		course -= 400
 	}
+
+	// Symbol
+	p.Symbol[0] = s[7]
+	p.Symbol[1] = s[8]
 
 	p.Comment += fmt.Sprintf(" (%.fkm/h, %.f°)", speed, course)
 
