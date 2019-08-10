@@ -122,7 +122,7 @@ var (
 		'\\': map[int]string{0: "HT", 1: "DF Station"},
 		']':  map[int]string{0: "HU", 1: "Post Office", 3: ":post_office:"},
 		'^':  map[int]string{0: "HV", 1: "Large Aircraft", 3: ":airplane:"},
-		'_':  map[int]string{0: "HW", 1: "Weather Station"},
+		'_':  map[int]string{0: "HW", 1: "Weather Station", 3: ":cloud:"},
 		'`':  map[int]string{0: "HX", 1: "Dish Antenna", 3: ":satellite:"},
 		'a':  map[int]string{0: "LA", 1: "Ambulance", 2: "1", 3: ":ambulance:"},
 		'b':  map[int]string{0: "LB", 1: "Bike", 2: "4", 3: ":bike:"},
