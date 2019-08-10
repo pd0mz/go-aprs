@@ -133,8 +133,8 @@ type Packet struct {
 	data     string // Unparsed data
 }
 
-func ParsePacket(raw string) (p Packet, err error) {
-	p = Packet{Raw: raw}
+func ParsePacket(raw string) (Packet, error) {
+	p := Packet{Raw: raw}
 
 	var i int
 	if i = strings.Index(raw, ":"); i < 0 {
@@ -143,25 +143,25 @@ func ParsePacket(raw string) (p Packet, err error) {
 	p.Payload = Payload(raw[i+1:])
 
 	// Parse src, dst and path
+	var err error
 	var a = raw[:i]
 	if i = strings.Index(a, ">"); i < 0 {
 		return p, errors.New("aprs: invalid packet")
 	}
 	if p.Src, err = ParseAddress(a[:i]); err != nil {
-		return
+		return p, err
 	}
 	var r = strings.Split(a[i+1:], ",")
 	if p.Dst, err = ParseAddress(r[0]); err != nil {
-		return
+		return p, err
 	}
 	if p.Path, err = ParsePath(strings.Join(r[1:], ",")); err != nil {
-		return
+		return p, err
 	}
 
 	// Post processing of payload
 	err = p.parse()
-
-	return
+	return p, err
 }
 
 func (p *Packet) parse() error {
