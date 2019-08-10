@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-var (
-	ErrInvalidPacket = errors.New(`aprs: invalid packet`)
-)
-
 type Payload string
 
 func (p Payload) Type() DataType {
@@ -20,23 +16,6 @@ func (p Payload) Type() DataType {
 	if len(p) > 0 {
 		t = DataType(p[0])
 	}
-
-	// The ! character may occur anywhere up to and including the 40th
-	// character position in the Information field
-	/*
-		if t != '!' {
-			var l = len(p)
-			if l > 40 {
-				l = 40
-			}
-			for i := 0; i < l; i++ {
-				if p[i] == '!' {
-					t = DataType(p[i])
-					break
-				}
-			}
-		}
-	*/
 
 	return t
 }
@@ -158,14 +137,14 @@ func ParsePacket(raw string) (p Packet, err error) {
 
 	var i int
 	if i = strings.Index(raw, ":"); i < 0 {
-		return p, ErrInvalidPacket
+		return p, errors.New("aprs: invalid packet")
 	}
 	p.Payload = Payload(raw[i+1:])
 
 	// Parse src, dst and path
 	var a = raw[:i]
 	if i = strings.Index(a, ">"); i < 0 {
-		return p, ErrInvalidPacket
+		return p, errors.New("aprs: invalid packet")
 	}
 	if p.Src, err = ParseAddress(a[:i]); err != nil {
 		return
@@ -208,7 +187,7 @@ func (p *Packet) parse() error {
 		p.data = txt
 	case '/', '@': // Lat/Long Position Report Format — with Timestamp
 		if len(s) < 8 {
-			return ErrInvalidPosition
+			return errors.New("aprs: invalid position")
 		}
 
 		if s[7] == 'h' || s[7] == 'z' || s[7] == '/' {

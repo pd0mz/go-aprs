@@ -2,16 +2,13 @@ package aprs
 
 import (
 	"errors"
+	"fmt"
 	"time"
-)
-
-var (
-	ErrInvalidTime = errors.New(`aprs: invalid time`)
 )
 
 func ParseTime(s string) (time.Time, error) {
 	if len(s) < 7 {
-		return time.Time{}, ErrInvalidTime
+		return time.Time{}, fmt.Errorf("aprs: invalid time: %q is less than 7 chars", s)
 	}
 
 	switch {
@@ -25,5 +22,5 @@ func ParseTime(s string) (time.Time, error) {
 		return time.Parse("01021504", s[:8])
 	}
 
-	return time.Time{}, ErrInvalidTime
+	return time.Time{}, errors.New("aprs: invalid time (unclear format)")
 }

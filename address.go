@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-var (
-	ErrAddressInvalid = errors.New(`aprs: invalid address`)
-)
-
 type Address struct {
 	Call     string
 	SSID     int
@@ -47,26 +43,27 @@ func (a Address) Secret() int16 {
 	return h & 0x7fff
 }
 
-func ParseAddress(s string) (a *Address, err error) {
+func ParseAddress(s string) (*Address, error) {
 	r := strings.HasSuffix(s, "*")
 	if r {
 		s = s[:len(s)-1]
 	}
 	p := strings.Split(strings.ToUpper(s), "-")
 	if len(p) == 0 || len(p) > 2 {
-		return nil, ErrAddressInvalid
+		return nil, errors.New("aprs: invalid address")
 	}
 
-	a = &Address{Call: p[0], Repeated: r}
+	a := &Address{Call: p[0], Repeated: r}
 	if len(p) == 2 {
 		var i int64
-		if i, err = strconv.ParseInt(p[1], 10, 32); err != nil || i > 16 {
-			return nil, ErrAddressInvalid
+		i, err := strconv.ParseInt(p[1], 10, 32)
+		if err != nil || i > 16 {
+			return nil, errors.New("aprs: invalid address")
 		}
 		a.SSID = int(i)
 	}
 
-	return
+	return a, nil
 }
 
 func MustParseAddress(s string) *Address {
@@ -87,19 +84,21 @@ func (p Path) String() string {
 	return strings.Join(s, ",")
 }
 
-func ParsePath(p string) (as Path, err error) {
+func ParsePath(p string) (Path, error) {
 	ss := strings.Split(p, ",")
 
 	if len(ss) == 0 {
-		return
+		return nil, nil
 	}
 
-	as = make(Path, len(ss))
+	var err error
+	as := make(Path, len(ss))
 	for i, s := range ss {
-		if as[i], err = ParseAddress(s); err != nil {
-			return
+		as[i], err = ParseAddress(s)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return
+	return as, nil
 }

@@ -56,9 +56,7 @@ func ReadPackets(conn *textproto.Conn, packets chan aprs.Packet) error {
 		packet, err := aprs.ParsePacket(line)
 		if err != nil {
 			log.Printf("error parsing packet: %v\n", err)
-			if err != aprs.ErrAddressInvalid {
-				continue
-			}
+			continue
 		}
 		packets <- packet
 	}
