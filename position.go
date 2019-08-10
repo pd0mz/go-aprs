@@ -202,13 +202,13 @@ func ParseCompressedPosition(s string) (Position, string, error) {
 	return pos, s[10:], nil
 }
 
-func ParseMicE(s, dest string) (Position, string, error) {
+func ParseMicE(s, dest string) (Position, error) {
 	// APRS PROTOCOL REFERENCE 1.0.1 Chapter 10, page 42 in PDF
 
 	pos := Position{}
 
 	if len(s) < 9 || len(dest) != 6 {
-		return pos, "", errors.New("aprs: invalid position")
+		return pos, errors.New("aprs: invalid position")
 	}
 
 	/* Mic-E Message Type - unused so far.
@@ -226,13 +226,13 @@ func ParseMicE(s, dest string) (Position, string, error) {
 	latF = strings.Trim(latF, ". ")
 	latD, err := strconv.ParseFloat(latF, 64)
 	if err != nil {
-		return pos, "", errors.New("aprs: invalid position")
+		return pos, errors.New("aprs: invalid position")
 	}
 	lonF := fmt.Sprintf("%s%s.%s%s", miceCodes[rune(dest[2])][0], miceCodes[rune(dest[3])][0], miceCodes[rune(dest[4])][0], miceCodes[rune(dest[5])][0])
 	lonF = strings.Trim(lonF, ". ")
 	latM, err := strconv.ParseFloat(lonF, 64)
 	if err != nil {
-		return pos, "", errors.New("aprs: invalid position")
+		return pos, errors.New("aprs: invalid position")
 	}
 	if latM != 0 {
 		latD += latM / 60
@@ -273,7 +273,7 @@ func ParseMicE(s, dest string) (Position, string, error) {
 	pos.Longitude = lonD
 	pos.Compressed = true
 
-	return pos, s[9:], nil
+	return pos, nil
 }
 
 func ParsePositionGrid(s string) (Position, string, error) {
