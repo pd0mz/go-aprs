@@ -216,8 +216,6 @@ func ParseMicE(s, dest string) (Position, error) {
 		return pos, errors.New("aprs: invalid MicE position")
 	}
 
-	// Mic-E Message Type
-
 	ns := miceCodes[rune(dest[3])][2]
 	we := miceCodes[rune(dest[5])][4]
 
