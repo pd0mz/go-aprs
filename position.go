@@ -51,24 +51,29 @@ var (
 
 	miceMsgTypes = map[string]string{
 		"000":          "Emergency",
-		"001 (Std)":    "M6: Priority",
-		"001 (Custom)": "C6: Custom-6",
-		"010 (Std)":    "M5: Special",
-		"010 (Custom)": "C5: Custom-5",
-		"011 (Std)":    "M4: Committed",
-		"011 (Custom)": "C4: Custom-4",
-		"100 (Std)":    "M3: Returning",
-		"100 (Custom)": "C3: Custom-3",
-		"101 (Std)":    "M2: In Service",
-		"101 (Custom)": "C2: Custom-2",
-		"110 (Std)":    "M1: En Route",
-		"110 (Custom)": "C1: Custom-1",
-		"111 (Std)":    "M0: Off Duty",
-		"111 (Custom)": "C0: Custom-0",
+		"001 (Std)":    "Priority",
+		"001 (Custom)": "Custom-6",
+		"010 (Std)":    "Special",
+		"010 (Custom)": "Custom-5",
+		"011 (Std)":    "Committed",
+		"011 (Custom)": "Custom-4",
+		"100 (Std)":    "Returning",
+		"100 (Custom)": "Custom-3",
+		"101 (Std)":    "In Service",
+		"101 (Custom)": "Custom-2",
+		"110 (Std)":    "En Route",
+		"110 (Custom)": "Custom-1",
+		"111 (Std)":    "Off Duty",
+		"111 (Custom)": "Custom-0",
 	}
 )
 
-const gridChars = "ABCDEFGHIJKLMNOPQRSTUVWX0123456789"
+const (
+	gridChars = "ABCDEFGHIJKLMNOPQRSTUVWX0123456789"
+
+	messageTypeStd    = "Std"
+	messageTypeCustom = "Custom"
+)
 
 type Position struct {
 	Latitude   float64 // Degrees
@@ -202,22 +207,16 @@ func ParseCompressedPosition(s string) (Position, string, error) {
 	return pos, s[10:], nil
 }
 
-func ParseMicE(s, dest string) (Position, string, error) {
+func ParseMicE(s, dest string) (Position, error) {
 	// APRS PROTOCOL REFERENCE 1.0.1 Chapter 10, page 42 in PDF
 
 	pos := Position{}
 
 	if len(s) < 9 || len(dest) != 6 {
-		return pos, "", errors.New("aprs: invalid position")
+		return pos, errors.New("aprs: invalid MicE position")
 	}
 
-	/* Mic-E Message Type - unused so far.
-	mt := []string{
-		miceCodes[dest[0]][1],
-		miceCodes[dest[1]][1],
-		miceCodes[dest[2]][1],
-	}
-	*/
+	// Mic-E Message Type
 
 	ns := miceCodes[rune(dest[3])][2]
 	we := miceCodes[rune(dest[5])][4]
@@ -226,18 +225,18 @@ func ParseMicE(s, dest string) (Position, string, error) {
 	latF = strings.Trim(latF, ". ")
 	latD, err := strconv.ParseFloat(latF, 64)
 	if err != nil {
-		return pos, "", errors.New("aprs: invalid position")
+		return pos, errors.New("aprs: invalid position")
 	}
 	lonF := fmt.Sprintf("%s%s.%s%s", miceCodes[rune(dest[2])][0], miceCodes[rune(dest[3])][0], miceCodes[rune(dest[4])][0], miceCodes[rune(dest[5])][0])
 	lonF = strings.Trim(lonF, ". ")
 	latM, err := strconv.ParseFloat(lonF, 64)
 	if err != nil {
-		return pos, "", errors.New("aprs: invalid position")
+		return pos, errors.New("aprs: invalid position")
 	}
 	if latM != 0 {
 		latD += latM / 60
 	}
-	if ns == "S" {
+	if strings.ToUpper(ns) == "S" {
 		latD = -latD
 	}
 
@@ -265,15 +264,14 @@ func ParseMicE(s, dest string) (Position, string, error) {
 	if lonM != 0 {
 		lonD += lonM / 60
 	}
-	if we == "W" {
+	if strings.ToUpper(we) == "W" {
 		lonD = -lonD
 	}
 
 	pos.Latitude = latD
 	pos.Longitude = lonD
-	pos.Compressed = true
 
-	return pos, "", nil
+	return pos, nil
 }
 
 func ParsePositionGrid(s string) (Position, string, error) {

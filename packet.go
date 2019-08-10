@@ -2,6 +2,7 @@ package aprs
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -230,12 +231,13 @@ func (p *Packet) parse() error {
 		p.Position = &pos
 		p.data = txt
 	case '`', '\'':
-		pos, comment, err := ParseMicE(s, p.Dst.Call)
+		pos, err := ParseMicE(s, p.Dst.Call)
 		if err != nil {
 			return err
 		}
 		p.Position = &pos
-		p.Comment = comment
+		p.parseMicEData()
+
 		return nil // there is no additional data to parse
 	default:
 		pos, txt, err := ParsePositionBoth(s)
@@ -256,7 +258,67 @@ func (p *Packet) parse() error {
 	return nil
 }
 
-func (p *Packet) parseCompressedData() (err error) {
+func (p *Packet) parseMicEData() error {
+	// APRS PROTOCOL REFERENCE 1.0.1 Chapter 10, page 42 in PDF
+	s := string(p.Payload)
+
+	// Mic-E Message Type
+	var mt []string
+	var t string
+	for i := 0; i < 3; i++ {
+		mc := miceCodes[rune(p.Dst.Call[i])][1]
+		if strings.HasSuffix(mc, "(Custom)") {
+			t = messageTypeCustom
+		} else if strings.HasSuffix(mc, "(Std)") {
+			t = messageTypeStd
+		}
+		mt = append(mt, string(mc[0]))
+	}
+	switch t {
+	case messageTypeStd:
+		mt = append(mt, " (Std)")
+	case messageTypeCustom:
+		mt = append(mt, " (Custom)")
+	}
+	p.Comment = miceMsgTypes[strings.Join(mt, "")]
+
+	// Speed and Course.
+	speed := float64(int(s[4])-28) * 10
+	dc := float64(int(s[5])-28) / 10
+	unit := float64(int(dc))
+	speed += unit
+	course := dc - unit
+	course += float64(int(s[6]) - 28)
+	if speed >= 800 {
+		speed -= 800
+	}
+	speed = 1.852 * speed // convert speed from knots to km/h
+	if course >= 400 {
+		course -= 400
+	}
+
+	p.Comment += fmt.Sprintf(" (%.fkm/h, %.f°)", speed, course)
+
+	// Check whether there's additional Telemetry or Status Text data.
+	if len(s) == 9 {
+		return nil
+	}
+
+	if s[9] == ',' || s[9] == '\x1d' {
+		// TODO: Parse telemetry data.
+		return nil
+	}
+
+	// Parse MicE Status Text data.
+	// TODO: Parse additional data in the Status Text data:
+	// - Actual (custom) text message
+	// - Maidenhead locator
+	// - Altitude
+
+	return nil
+}
+
+func (p *Packet) parseCompressedData() error {
 	// Parse csT bytes
 	if len(p.data) >= 3 {
 		// Compression Type (T) Byte Format
@@ -277,9 +339,9 @@ func (p *Packet) parseCompressedData() (err error) {
 		Tb := p.data[2] - 33
 		if p.data[0] != ' ' && ((Tb>>3)&3) == 2 {
 			// CGA sentence, NMEA Source = 0b10
-			var d int
-			if d, err = base91Decode(p.data[0:2]); err != nil {
-				return
+			d, err := base91Decode(p.data[0:2])
+			if err != nil {
+				return err
 			}
 			p.Altitude = math.Pow(1.002, float64(d))
 			p.Comment = p.data[3:]
@@ -292,11 +354,10 @@ func (p *Packet) parseCompressedData() (err error) {
 			p.Range = 2 * math.Pow(1.08, float64(sb))
 		}
 	}
-
-	return
+	return nil
 }
 
-func (p *Packet) parseData() (err error) {
+func (p *Packet) parseData() error {
 	//log.Printf("data %q\n", p.data)
 	switch {
 	case len(p.data) >= 1 && p.data[0] == ' ':
@@ -311,7 +372,11 @@ func (p *Packet) parseData() (err error) {
 		p.Comment = p.data[7:]
 
 	case len(p.data) >= 7 && strings.HasPrefix(p.data, "RNG"):
+		var err error
 		p.Range, err = strconv.ParseFloat(p.data[3:7], 64)
+		if err != nil {
+			return err
+		}
 		p.Comment = p.data[7:]
 
 	case len(p.data) >= 7 && strings.HasPrefix(p.data, "DFS"):
@@ -321,7 +386,7 @@ func (p *Packet) parseData() (err error) {
 		p.DFS.DirectivityCode = p.data[6]
 		p.Comment = p.data[7:]
 	}
-	return
+	return nil
 }
 
 func (p Payload) Time() (time.Time, error) {
