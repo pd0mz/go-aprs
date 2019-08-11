@@ -173,12 +173,15 @@ func (p *Packet) parse() error {
 	case '!': // Lat/Long Position Report Format — without Timestamp
 		var o = strings.IndexByte(s, '!')
 		pos, txt, err := ParsePosition(s[o+1:], !isDigit(s[o+1]))
-		//log.Printf("parse result: %s, %q, %v\n", pos, txt, err)
 		if err != nil {
 			return err
 		}
 		p.Position = &pos
 		p.data = txt
+		if len(s) >= 20 {
+			p.Symbol[0] = s[9]
+			p.Symbol[1] = s[19]
+		}
 	case '=':
 		compressed := IsValidCompressedSymTable(s[1])
 		pos, txt, err := ParsePosition(s[1:], compressed)
@@ -187,16 +190,24 @@ func (p *Packet) parse() error {
 		}
 		p.Position = &pos
 		p.data = txt
+		if compressed {
+			p.Symbol[0] = s[1]
+			p.Symbol[1] = s[10]
+		} else {
+			p.Symbol[0] = s[9]
+			p.Symbol[1] = s[19]
+		}
 	case '/', '@': // Lat/Long Position Report Format — with Timestamp
 		if len(s) < 8 {
 			return errors.New("aprs: invalid position")
 		}
 
+		var compressed bool
 		if s[7] == 'h' || s[7] == 'z' || s[7] == '/' {
 			if ts, err := ParseTime(s[1:]); err == nil {
 				p.Time = &ts
 			}
-			compressed := IsValidCompressedSymTable(s[8])
+			compressed = IsValidCompressedSymTable(s[8])
 			pos, txt, err := ParsePosition(s[8:], compressed)
 			if err != nil {
 				return err
@@ -209,13 +220,20 @@ func (p *Packet) parse() error {
 				return err
 			}
 			p.Time = &ts
-			compressed := IsValidCompressedSymTable(s[10])
+			compressed = IsValidCompressedSymTable(s[10])
 			pos, txt, err := ParsePosition(s[10:], compressed)
 			if err != nil {
 				return err
 			}
 			p.Position = &pos
 			p.data = txt
+		}
+		if compressed {
+			p.Symbol[0] = s[8]
+			p.Symbol[1] = s[17]
+		} else {
+			p.Symbol[0] = s[16]
+			p.Symbol[1] = s[26]
 		}
 	case ';':
 		pos, txt, err := ParsePosition(s[18:], !isDigit(s[18]))
@@ -261,6 +279,7 @@ func (p *Packet) parse() error {
 
 func (p *Packet) parseMicEData() error {
 	// APRS PROTOCOL REFERENCE 1.0.1 Chapter 10, page 42 in PDF
+
 	s := string(p.Payload)
 
 	// Mic-E Message Type
@@ -363,7 +382,6 @@ func (p *Packet) parseCompressedData() error {
 }
 
 func (p *Packet) parseData() error {
-	//log.Printf("data %q\n", p.data)
 	switch {
 	case len(p.data) >= 1 && p.data[0] == ' ':
 		p.Comment = p.data[1:]

@@ -15,7 +15,7 @@ func (s Symbol) get(idx int) (string, error) {
 	}
 	n, ok := m[s[1]]
 	if !ok {
-		return "", fmt.Errorf("unknown symbol %c", s[1])
+		return "", fmt.Errorf("unknown symbol %x", s[1])
 	}
 	if i, ok := n[idx]; ok {
 		return i, nil
