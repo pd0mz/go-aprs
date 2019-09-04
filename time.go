@@ -1,17 +1,21 @@
 package aprs
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
 
-var (
-	ErrInvalidTime = errors.New(`aprs: invalid time`)
-)
+type TimeFormatError struct {
+	Time string
+}
+
+func (err TimeFormatError) Error() string {
+	return fmt.Sprintf("aprs: unknown time stamp %q", err.Time)
+}
 
 func ParseTime(s string) (time.Time, error) {
 	if len(s) < 7 {
-		return time.Time{}, ErrInvalidTime
+		return time.Time{}, TimeFormatError{s}
 	}
 
 	switch {
@@ -23,7 +27,7 @@ func ParseTime(s string) (time.Time, error) {
 		return time.Parse("150405", s[:6])
 	case len(s) >= 8: // Month/Day/Hours/Minutes (MDHM) format
 		return time.Parse("01021504", s[:8])
+	default:
+		return time.Time{}, TimeFormatError{s}
 	}
-
-	return time.Time{}, ErrInvalidTime
 }

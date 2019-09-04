@@ -2,81 +2,71 @@ package aprsis
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"net/textproto"
 	"strings"
 
 	"github.com/pd0mz/go-aprs"
 )
 
-var (
-	ErrLoginFailed = errors.New(`aprsis: login failed`)
-	ErrProtocol    = errors.New(`aprsis: protocol error`)
+const (
+	version = "0.1"
 )
 
-type APRSIS struct {
-	*textproto.Conn
+var ErrNotAllowed = errors.New("aprsis: login failed")
+
+type ProtocolError struct {
+	Line string
 }
 
-func Dial(network, addr string) (s *APRSIS, err error) {
-	s = new(APRSIS)
-	s.Conn, err = textproto.Dial(network, addr)
-	return
+func (err ProtocolError) Error() string {
+	return fmt.Sprintf("aprsis: protocol error: %s", err.Line)
 }
 
-func (s *APRSIS) Login(address *aprs.Address, filter string) (err error) {
-	if address == nil {
-		return aprs.ErrAddressInvalid
+func Connect(proto, addr, call, filter string) (*textproto.Conn, error) {
+	conn, err := textproto.Dial(proto, addr)
+	if err != nil {
+		return nil, err
 	}
 
 	if filter != "" {
 		filter = " filter " + filter
 	}
 
-	if err = s.PrintfLine("user %s pass %d vers go-aprs%s", address, address.Secret(), filter); err != nil {
-		return
+	if err := conn.PrintfLine("user %s pass -1 vers go-aprs %s%s", call, version, filter); err != nil {
+		return nil, err
 	}
-
-	var line string
 	for {
-		if line, err = s.ReadLine(); err != nil {
-			return
+		line, err := conn.ReadLine()
+		if err != nil {
+			return nil, err
 		}
-
 		line = strings.ToLower(line)
 		if strings.HasPrefix(line, "# logresp ") {
-			switch {
-			case strings.Index(line, " verified") > 0:
-				return nil
-			case strings.Index(line, " unverified") > 0:
-				return ErrLoginFailed
-			}
+			return conn, nil
 		} else if strings.HasPrefix(line, "# invalid ") {
-			return ErrProtocol
+			return nil, ProtocolError{line}
 		} else if strings.HasPrefix(line, "# login by user not allowed") {
-			return ErrLoginFailed
+			return nil, ErrNotAllowed
 		}
 	}
 }
 
-func (s *APRSIS) ReadPackets(packets chan aprs.Packet) (err error) {
-	var line string
+func ReadPackets(conn *textproto.Conn, packets chan aprs.Packet) error {
 	for {
-		if line, err = s.ReadLine(); err != nil {
-			return
+		line, err := conn.ReadLine()
+		if err != nil {
+			return err
 		}
-		if len(line) == 0 {
+		if len(line) == 0 || line[0] == '#' {
 			continue
 		}
 
-		if line[0] == '#' {
+		packet, err := aprs.ParsePacket(line)
+		if err != nil {
+			log.Printf("error parsing packet: %v\n", err)
 			continue
-		}
-
-		var packet aprs.Packet
-		if packet, err = aprs.ParsePacket(line); err != nil {
-			if err != aprs.ErrAddressInvalid {
-				return
-			}
 		}
 		packets <- packet
 	}
