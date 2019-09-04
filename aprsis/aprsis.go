@@ -7,12 +7,22 @@ import (
 	"net/textproto"
 	"strings"
 
-	"github.com/hb9tf/go-aprs"
+	"github.com/pd0mz/go-aprs"
 )
 
 const (
 	version = "0.1"
 )
+
+var ErrNotAllowed = errors.New("aprsis: login failed")
+
+type ProtocolError struct {
+	Line string
+}
+
+func (err ProtocolError) Error() string {
+	return fmt.Sprintf("aprsis: protocol error: %s", err.Line)
+}
 
 func Connect(proto, addr, call, filter string) (*textproto.Conn, error) {
 	conn, err := textproto.Dial(proto, addr)
@@ -36,9 +46,9 @@ func Connect(proto, addr, call, filter string) (*textproto.Conn, error) {
 		if strings.HasPrefix(line, "# logresp ") {
 			return conn, nil
 		} else if strings.HasPrefix(line, "# invalid ") {
-			return nil, fmt.Errorf("aprsis protocol error: %s", line)
+			return nil, ProtocolError{line}
 		} else if strings.HasPrefix(line, "# login by user not allowed") {
-			return nil, errors.New("aprsis login failed (user not allowed)")
+			return nil, ErrNotAllowed
 		}
 	}
 }

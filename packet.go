@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var (
+	// ErrInvalidPacket signals a corrupted/unknown APRS packet.
+	ErrInvalidPacket = errors.New("aprs: invalid packet")
+
+	// ErrInvalidPosition signals a corrupted APRS position report.
+	ErrInvalidPosition = errors.New("aprs: invalid position")
+)
+
 type Payload string
 
 func (p Payload) Type() DataType {
@@ -139,7 +147,7 @@ func ParsePacket(raw string) (Packet, error) {
 
 	var i int
 	if i = strings.Index(raw, ":"); i < 0 {
-		return p, errors.New("aprs: invalid packet")
+		return p, ErrInvalidPacket
 	}
 	p.Payload = Payload(raw[i+1:])
 
@@ -147,7 +155,7 @@ func ParsePacket(raw string) (Packet, error) {
 	var err error
 	var a = raw[:i]
 	if i = strings.Index(a, ">"); i < 0 {
-		return p, errors.New("aprs: invalid packet")
+		return p, ErrInvalidPacket
 	}
 	if p.Src, err = ParseAddress(a[:i]); err != nil {
 		return p, err
@@ -199,7 +207,7 @@ func (p *Packet) parse() error {
 		}
 	case '/', '@': // Lat/Long Position Report Format — with Timestamp
 		if len(s) < 8 {
-			return errors.New("aprs: invalid position")
+			return ErrInvalidPosition
 		}
 
 		var compressed bool

@@ -158,7 +158,7 @@ func TestPacket(t *testing.T) {
 			Dst:      MustParseAddress("APRS"),
 			PathLen:  1,
 			Type:     DataType('['),
-			Position: &Position{Latitude: 193.916667, Longitude: -90.250000},
+			Position: &Position{Latitude: 51.958333, Longitude: -0.500000},
 		},
 		{
 			Raw:      "N0CALL>APRS,qAC:[IO91]",
@@ -166,7 +166,7 @@ func TestPacket(t *testing.T) {
 			Dst:      MustParseAddress("APRS"),
 			PathLen:  1,
 			Type:     DataType('['),
-			Position: &Position{Latitude: 192.0, Longitude: -91.0},
+			Position: &Position{Latitude: 51.0, Longitude: -2.0},
 		},
 		{
 			Raw:      "WX4GSO-9>APN382,qAR,WD4LSS:!3545.18NL07957.08W#PHG5680/R,W,85NC,NCn Mount Shepherd Piedmont Triad NC",
@@ -268,7 +268,7 @@ func TestPacket(t *testing.T) {
 		}
 		if test.Velocity != nil {
 			if p.Velocity.Course == 0 {
-				t.Fatalf("expected velocity %s, got none", test.Velocity)
+				t.Fatalf("expected velocity %v, got none", test.Velocity)
 			}
 			if math.Abs(test.Velocity.Course-p.Velocity.Course) > 1.0 {
 				t.Fatalf("expected course %f, got %f", test.Velocity.Course, p.Velocity.Course)

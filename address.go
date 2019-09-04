@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+var (
+	ErrAddressInvalid = errors.New(`aprs: invalid address`)
+)
+
 type Address struct {
 	Call     string
 	SSID     int
@@ -50,7 +54,7 @@ func ParseAddress(s string) (*Address, error) {
 	}
 	p := strings.Split(strings.ToUpper(s), "-")
 	if len(p) == 0 || len(p) > 2 {
-		return nil, errors.New("aprs: invalid address")
+		return nil, ErrAddressInvalid
 	}
 
 	a := &Address{Call: p[0], Repeated: r}
@@ -58,7 +62,7 @@ func ParseAddress(s string) (*Address, error) {
 		var i int64
 		i, err := strconv.ParseInt(p[1], 10, 32)
 		if err != nil || i > 16 {
-			return nil, errors.New("aprs: invalid address")
+			return nil, ErrAddressInvalid
 		}
 		a.SSID = int(i)
 	}

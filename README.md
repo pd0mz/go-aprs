@@ -6,4 +6,8 @@ See [hb9tf/statusupdater](https://github.com/hb9tf/statusupdater) as an example 
 
 ## Acknowledgements
 
-Initial version based on [pd0mz/go-aprs](https://github.com/pd0mz/go-aprs).
+Initial version based on [dustin/go-aprs](https://github.com/dustin/go-aprs).
+
+Contributions by:
+* Martin ([~finfinack](/finfinack)) and Tango Foxtrot Wireless Society (HB9TF), http://hb9tf.ch/
+* Tadeusz Magura-Witkowsk ([~Teeed](/Teeed/))
