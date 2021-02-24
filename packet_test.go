@@ -29,6 +29,15 @@ func testDistance(a *Position, b *Position) float64 {
 	return 2 * earthRadius * math.Asin(math.Sqrt(h))
 }
 
+func TestBadPacket(t *testing.T) {
+	raw := "N0CALL-9>P_0_P?,N0CALL-3*,WIDE1*,N0CALL-13*,N0CALL-10*,WIDE2*:'{g+l >/Test"
+	_, err := ParsePacket(raw)
+
+	if err == nil {
+		t.Fatalf("Expected an error parsing a bad Mic-E packet.")
+	}
+}
+
 func TestPacket(t *testing.T) {
 	var tests = []struct {
 		Raw      string

@@ -263,7 +263,10 @@ func (p *Packet) parse() error {
 			return err
 		}
 		p.Position = &pos
-		p.parseMicEData()
+		err = p.parseMicEData()
+		if err != nil {
+			return err
+		}
 
 		return nil // there is no additional data to parse
 	default:
@@ -295,6 +298,12 @@ func (p *Packet) parseMicEData() error {
 	var t string
 	for i := 0; i < 3; i++ {
 		mc := miceCodes[rune(p.Dst.Call[i])][1]
+
+		if len(mc) == 0 {
+			// Malformed Mic-E packet, prevent index out of bounds.
+			return ErrInvalidPacket
+		}
+
 		if strings.HasSuffix(mc, "(Custom)") {
 			t = messageTypeCustom
 		} else if strings.HasSuffix(mc, "(Std)") {
